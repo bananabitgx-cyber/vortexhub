@@ -1,10 +1,9 @@
 -- =============================================================================
--- VORTEX HUB V3.2: SERVER-SYNCED TOOL ENGINE (FIXES GHOST DAMAGE)
+-- VORTEX HUB V3.4: HEALTH-VALVE ATTACK ENGINE (ANTI-NPC LOCK & DAMAGE BYPASS)
 -- =============================================================================
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 if LocalPlayer.PlayerGui:FindFirstChild("VortexMobileEngine") then
@@ -17,47 +16,56 @@ local Theme = {
 	Accent = Color3.fromRGB(0, 162, 255),        
 	Success = Color3.fromRGB(0, 230, 118),       
 	Danger = Color3.fromRGB(255, 35, 102),       
-	Text = Color3.fromRGB(245, 246, 250),
-	Muted = Color3.fromRGB(140, 145, 170)
+	Text = Color3.fromRGB(245, 246, 250)
 }
 
 local Config = {
 	AutoFarm = false,
 	KillAura = false,
-	AttackSpeed = 0.1, -- Balanced speed to prevent Roblox from blocking your inputs
+	AttackSpeed = 0.1, 
 	WalkSpeedValue = 16
 }
 
 local CORRECT_KEY = "VortexHubOnTop"
 
 ---------------------------------------------------------
--- UNIVERSAL AUTO-ATTACK MOTOR (SERVER SYNCHRONIZED)
+-- ADVANCED COMBAT REMOTES DETECTION (SERVER EXPLOIT BYPASS)
 ---------------------------------------------------------
-local function autoAttack()
+local function forceServerDamage()
 	local char = LocalPlayer.Character
 	if not char then return end
 
-	-- 1. Automatically find any weapon/tool in your Backpack or Character
+	-- Automatically force equip weapon
 	local tool = char:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
-	
 	if tool then
-		-- Equip the tool automatically if it's sitting in your backpack
 		if tool.Parent == LocalPlayer.Backpack then
 			tool.Parent = char
 		end
-		
-		-- 2. Force the tool to activate on the server (Swings sword / fires gun)
-		tool:Activate()
-		
-		-- 3. Bypass common combat security structures by simulating a physical click
-		local combatRemote = tool:FindFirstChildOfClass("RemoteEvent") or tool:FindFirstChildOfClass("RemoteFunction")
-		if combatRemote then
-			combatRemote:FireServer()
-		end
+		tool:Activate() -- Standard physical hit trigger
 	end
+
+	-- UNIVERSAL MOBILE REMOTE BYPASS LAYER
+	-- Automatically searches the game's network system for combat events and triggers them
+	pcall(function()
+		local remotes = {
+			ReplicatedStorage:FindFirstChild("CombatEvent"),
+			ReplicatedStorage:FindFirstChild("RigControllerEvent"), -- Blox Fruits Style
+			ReplicatedStorage:FindFirstChild("MainRemote"),
+			char:FindFirstChildOfClass("Tool") and char:FindFirstChildOfClass("Tool"):FindFirstChildOfClass("RemoteEvent")
+		}
+		
+		for _, remote in pairs(remotes) do
+			if remote and remote:IsA("RemoteEvent") then
+				remote:FireServer() -- Forces the server to authorize the damage packet
+			end
+		end
+	end)
 end
 
-local function getClosestTarget()
+---------------------------------------------------------
+-- HEALTH-FILTER TARGET FINDER (DEFEATS SAFE-ZONE QUEST NPCs)
+---------------------------------------------------------
+local function getRealCombatEnemy()
 	local char = LocalPlayer.Character
 	if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
 	
@@ -66,13 +74,19 @@ local function getClosestTarget()
 	
 	for i = 1, #allObjects do
 		local obj = allObjects[i]
+		
 		if obj:IsA("Humanoid") and obj.Parent and obj.Parent ~= char then
 			local rootPart = obj.Parent:FindFirstChild("HumanoidRootPart") or obj.Parent:FindFirstChild("Torso") or obj.Parent:FindFirstChild("UpperTorso")
+			
 			if rootPart and obj.Health > 0 then
-				local dist = (char.HumanoidRootPart.Position - rootPart.Position).Magnitude
-				if dist < maxDist then
-					maxDist = dist
-					closest = obj.Parent
+				-- CRITICAL FILTER FIX: Real hostile enemies have custom health bars.
+				-- Quest/Safe Zone NPCs are default Roblox rigs (exactly 100 max health) or invincible (0 max health).
+				if obj.MaxHealth > 101 or (obj.MaxHealth > 5 and obj.MaxHealth < 100) then
+					local dist = (char.HumanoidRootPart.Position - rootPart.Position).Magnitude
+					if dist < maxDist then
+						maxDist = dist
+						closest = obj.Parent
+					end
 				end
 			end
 		end
@@ -81,26 +95,26 @@ local function getClosestTarget()
 end
 
 ---------------------------------------------------------
--- PERFORMANCE THREAD CONTROLLERS
+-- OPERATIONS CORE THREADS
 ---------------------------------------------------------
 task.spawn(function()
 	while task.wait(0.05) do 
 		if Config.AutoFarm or Config.KillAura then
-			local target = getClosestTarget()
+			local target = getRealCombatEnemy()
 			local char = LocalPlayer.Character
 			
 			if target and char and char:FindFirstChild("HumanoidRootPart") then
 				local targetRoot = target:FindFirstChild("HumanoidRootPart") or target:FindFirstChild("Torso") or target:FindFirstChild("UpperTorso")
 				
 				if targetRoot then
-					-- Auto Farm position lock
+					-- Teleport directly above the real hostile enemy
 					if Config.AutoFarm then
-						char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 5, 0)
+						char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 5.5, 0)
 					end
 					
-					-- Kill Aura execution: Swings weapons through the server link
-					if Config.KillAura and (char.HumanoidRootPart.Position - targetRoot.Position).Magnitude <= 25 then
-						autoAttack()
+					-- Force attack loop
+					if Config.KillAura and (char.HumanoidRootPart.Position - targetRoot.Position).Magnitude <= 35 then
+						forceServerDamage()
 						task.wait(Config.AttackSpeed)
 					end
 				end
@@ -119,7 +133,7 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------
--- CORE CONSOLE LAYOUT
+-- GRAPHICAL INTERFACE
 ---------------------------------------------------------
 local function BuildMainConsole(rootContainer)
 	local MainFrame = Instance.new("Frame")
@@ -136,18 +150,17 @@ local function BuildMainConsole(rootContainer)
 	local Title = Instance.new("TextLabel")
 	Title.Size = UDim2.new(1, 0, 0, 50)
 	Title.BackgroundTransparency = 1
-	Title.Text = "VORTEX HUB V3.2 // SERVER ACTIVE"
+	Title.Text = "VORTEX HUB V3.4 // GAME FIX"
 	Title.TextColor3 = Theme.Accent
 	Title.Font = Enum.Font.GothamBold
 	Title.TextSize = 14
 	Title.Parent = MainFrame
 	
-	-- 1. Auto Farm Button
 	local FarmBtn = Instance.new("TextButton")
 	FarmBtn.Size = UDim2.new(0, 320, 0, 45)
 	FarmBtn.Position = UDim2.new(0, 20, 0, 65)
 	FarmBtn.BackgroundColor3 = Theme.Danger
-	FarmBtn.Text = "AUTO FARM ENGINE // DEACTIVATED"
+	FarmBtn.Text = "SMART AUTO FARM // INACTIVE"
 	FarmBtn.TextColor3 = Theme.Text
 	FarmBtn.Font = Enum.Font.GothamBold
 	FarmBtn.TextSize = 12
@@ -157,15 +170,14 @@ local function BuildMainConsole(rootContainer)
 	FarmBtn.MouseButton1Click:Connect(function()
 		Config.AutoFarm = not Config.AutoFarm
 		FarmBtn.BackgroundColor3 = Config.AutoFarm and Theme.Success or Theme.Danger
-		FarmBtn.Text = Config.AutoFarm and "AUTO FARM ENGINE // ACTIVE" or "AUTO FARM ENGINE // DEACTIVATED"
+		FarmBtn.Text = Config.AutoFarm and "SMART AUTO FARM // ACTIVE" or "SMART AUTO FARM // INACTIVE"
 	end)
 	
-	-- 2. Kill Aura Button
 	local AuraBtn = Instance.new("TextButton")
 	AuraBtn.Size = UDim2.new(0, 320, 0, 45)
 	AuraBtn.Position = UDim2.new(0, 20, 0, 125)
 	AuraBtn.BackgroundColor3 = Theme.Danger
-	AuraBtn.Text = "SERVER ATTACK AURA // DEACTIVATED"
+	AuraBtn.Text = "BYPASS KILL AURA // OFF"
 	AuraBtn.TextColor3 = Theme.Text
 	AuraBtn.Font = Enum.Font.GothamBold
 	AuraBtn.TextSize = 12
@@ -175,15 +187,14 @@ local function BuildMainConsole(rootContainer)
 	AuraBtn.MouseButton1Click:Connect(function()
 		Config.KillAura = not Config.KillAura
 		AuraBtn.BackgroundColor3 = Config.KillAura and Theme.Success or Theme.Danger
-		AuraBtn.Text = Config.KillAura and "SERVER ATTACK AURA // ACTIVE" or "SERVER ATTACK AURA // DEACTIVATED"
+		AuraBtn.Text = Config.KillAura and "BYPASS KILL AURA // ACTIVE" or "BYPASS KILL AURA // OFF"
 	end)
 	
-	-- 3. Speed Config Button
 	local SpeedBtn = Instance.new("TextButton")
 	SpeedBtn.Size = UDim2.new(0, 320, 0, 45)
 	SpeedBtn.Position = UDim2.new(0, 20, 0, 185)
 	SpeedBtn.BackgroundColor3 = Theme.Surface
-	SpeedBtn.Text = "ATTACK INTERVAL // 0.1s (BALANCED)"
+	SpeedBtn.Text = "ATTACK SPEED // BALANCED (0.1s)"
 	SpeedBtn.TextColor3 = Theme.Accent
 	SpeedBtn.Font = Enum.Font.GothamBold
 	SpeedBtn.TextSize = 12
@@ -191,21 +202,20 @@ local function BuildMainConsole(rootContainer)
 	Instance.new("UICorner", SpeedBtn).CornerRadius = UDim.new(0, 6)
 	
 	local delayValues = {0.4, 0.1, 0.01}
-	local delayNames = {"0.4s (LEGIT CLASSIC)", "0.1s (BALANCED RUN)", "0.01s (MAX RAGE MODE)"}
+	local delayNames = {"0.4s (SLOW)", "0.1s (BALANCED)", "0.01s (RAGE)"}
 	local currentIdx = 2
 	
 	SpeedBtn.MouseButton1Click:Connect(function()
 		currentIdx = (currentIdx % #delayValues) + 1
 		Config.AttackSpeed = delayValues[currentIdx]
-		SpeedBtn.Text = "ATTACK INTERVAL // " .. delayNames[currentIdx]
+		SpeedBtn.Text = "ATTACK SPEED // " .. delayNames[currentIdx]
 	end)
 
-	-- 4. WalkSpeed Override Button
 	local PhysBtn = Instance.new("TextButton")
 	PhysBtn.Size = UDim2.new(0, 320, 0, 45)
 	PhysBtn.Position = UDim2.new(0, 20, 0, 245)
 	PhysBtn.BackgroundColor3 = Theme.Surface
-	PhysBtn.Text = "WALKSPEED OVERRIDE // NORMAL (16)"
+	PhysBtn.Text = "WALKSPEED // NORMAL (16)"
 	PhysBtn.TextColor3 = Theme.Text
 	PhysBtn.Font = Enum.Font.GothamBold
 	PhysBtn.TextSize = 12
@@ -215,13 +225,13 @@ local function BuildMainConsole(rootContainer)
 	PhysBtn.MouseButton1Click:Connect(function()
 		if Config.WalkSpeedValue == 16 then
 			Config.WalkSpeedValue = 80
-			PhysBtn.Text = "WALKSPEED OVERRIDE // INSANE (80)"
+			PhysBtn.Text = "WALKSPEED // FAST (80)"
 		elseif Config.WalkSpeedValue == 80 then
 			Config.WalkSpeedValue = 200
-			PhysBtn.Text = "WALKSPEED OVERRIDE // TELEPORT (200)"
+			PhysBtn.Text = "WALKSPEED // TELEPORT (200)"
 		else
 			Config.WalkSpeedValue = 16
-			PhysBtn.Text = "WALKSPEED OVERRIDE // NORMAL (16)"
+			PhysBtn.Text = "WALKSPEED // NORMAL (16)"
 		end
 	end)
 	
@@ -241,7 +251,7 @@ local function BuildMainConsole(rootContainer)
 end
 
 ---------------------------------------------------------
--- ENTRY POINT BOOTLOADER
+-- SECURITY INITIALIZATION GATE
 ---------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VortexMobileEngine"
