@@ -1,0 +1,281 @@
+-- =============================================================================
+-- VORTEX HUB V3: COMPREHENSIVE PRODUCTION ENGINE (DELTA MOBILE SPECIFIC)
+-- =============================================================================
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Prevent screen duplicate cluttering or crashing on re-execution
+if LocalPlayer.PlayerGui:FindFirstChild("VortexMobileEngine") then
+	LocalPlayer.PlayerGui.VortexMobileEngine:Destroy()
+end
+
+-- Premium High-Contrast Color Palette
+local Theme = {
+	Backdrop = Color3.fromRGB(15, 16, 22),       
+	Surface = Color3.fromRGB(24, 26, 37),        
+	Accent = Color3.fromRGB(0, 162, 255),        
+	Success = Color3.fromRGB(0, 230, 118),       
+	Danger = Color3.fromRGB(255, 35, 102),       
+	Text = Color3.fromRGB(245, 246, 250),
+	Muted = Color3.fromRGB(140, 145, 170)
+}
+
+-- Central Configuration State Matrix
+local Config = {
+	AutoFarm = false,
+	KillAura = false,
+	AttackSpeed = 0.001, -- Default uncapped Vortex Mode
+	WalkSpeedValue = 16
+}
+
+local CORRECT_KEY = "VortexHubOnTop"
+
+---------------------------------------------------------
+-- DELTA-SAFE SEARCH ENGINE (Recursive World Scan)
+---------------------------------------------------------
+local function getClosestTarget()
+	local char = LocalPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+	
+	local closest, maxDist = nil, math.huge
+	local children = workspace:GetChildren()
+	
+	for i = 1, #children do
+		local obj = children[i]
+		if obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+			if obj.Humanoid.Health > 0 and obj ~= char then
+				local dist = (char.HumanoidRootPart.Position - obj.HumanoidRootPart.Position).Magnitude
+				if dist < maxDist then
+					maxDist = dist
+					closest = obj
+				end
+			end
+		end
+	end
+	return closest
+end
+
+---------------------------------------------------------
+-- PERFORMANCE-STABLE CONCURRENT THREADS
+---------------------------------------------------------
+task.spawn(function()
+	while task.wait(0.1) do -- Safe yield loops keep Delta Mobile stable
+		if Config.AutoFarm or Config.KillAura then
+			local target = getClosestTarget()
+			local char = LocalPlayer.Character
+			
+			if target and char and char:FindFirstChild("HumanoidRootPart") then
+				-- Safe Farm Framework: Position player smoothly directly above target head
+				if Config.AutoFarm then
+					char.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 6, 0)
+				end
+				
+				-- Safe Aura Processing Calculations
+				if Config.KillAura and (char.HumanoidRootPart.Position - target.HumanoidRootPart.Position).Magnitude <= 30 then
+					target.Humanoid:TakeDamage(15)
+					task.wait(Config.AttackSpeed)
+				end
+			end
+		end
+	end
+end)
+
+task.spawn(function()
+	while task.wait(0.5) do
+		local char = LocalPlayer.Character
+		if char and char:FindFirstChild("Humanoid") then
+			char.Humanoid.WalkSpeed = Config.WalkSpeedValue
+		end
+	end
+end)
+
+---------------------------------------------------------
+-- CORE HUB OPERATIONS CONTROL WINDOW
+---------------------------------------------------------
+local function BuildMainConsole(rootContainer)
+	local MainFrame = Instance.new("Frame")
+	MainFrame.Size = UDim2.new(0, 360, 0, 310)
+	MainFrame.Position = UDim2.new(0.5, -180, 0.4, -155)
+	MainFrame.BackgroundColor3 = Theme.Backdrop
+	MainFrame.BorderSizePixel = 0
+	MainFrame.Active = true
+	MainFrame.Draggable = true -- Mobile drag method natively supported by Delta
+	MainFrame.Parent = rootContainer
+	
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+	
+	local Title = Instance.new("TextLabel")
+	Title.Size = UDim2.new(1, 0, 0, 50)
+	Title.BackgroundTransparency = 1
+	Title.Text = "VORTEX HUB V3 // OPERATIONAL CONTROL"
+	Title.TextColor3 = Theme.Accent
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 14
+	Title.Parent = MainFrame
+	
+	-- 1. Button Layout: Auto Farm Engine Switcher
+	local FarmBtn = Instance.new("TextButton")
+	FarmBtn.Size = UDim2.new(0, 320, 0, 45)
+	FarmBtn.Position = UDim2.new(0, 20, 0, 65)
+	FarmBtn.BackgroundColor3 = Theme.Danger
+	FarmBtn.Text = "AUTO FARM CONTROLLER // LOCKED"
+	FarmBtn.TextColor3 = Theme.Text
+	FarmBtn.Font = Enum.Font.GothamBold
+	FarmBtn.TextSize = 12
+	FarmBtn.Parent = MainFrame
+	Instance.new("UICorner", FarmBtn).CornerRadius = UDim.new(0, 6)
+	
+	FarmBtn.MouseButton1Click:Connect(function()
+		Config.AutoFarm = not Config.AutoFarm
+		FarmBtn.BackgroundColor3 = Config.AutoFarm and Theme.Success or Theme.Danger
+		FarmBtn.Text = Config.AutoFarm and "AUTO FARM CONTROLLER // RUNNING" or "AUTO FARM CONTROLLER // LOCKED"
+	end)
+	
+	-- 2. Button Layout: Kill Aura Target Invalidator
+	local AuraBtn = Instance.new("TextButton")
+	AuraBtn.Size = UDim2.new(0, 320, 0, 45)
+	AuraBtn.Position = UDim2.new(0, 20, 0, 125)
+	AuraBtn.BackgroundColor3 = Theme.Danger
+	AuraBtn.Text = "PASSIVE KILL AURA // DEACTIVATED"
+	AuraBtn.TextColor3 = Theme.Text
+	AuraBtn.Font = Enum.Font.GothamBold
+	AuraBtn.TextSize = 12
+	AuraBtn.Parent = MainFrame
+	Instance.new("UICorner", AuraBtn).CornerRadius = UDim.new(0, 6)
+	
+	AuraBtn.MouseButton1Click:Connect(function()
+		Config.KillAura = not Config.KillAura
+		AuraBtn.BackgroundColor3 = Config.KillAura and Theme.Success or Theme.Danger
+		AuraBtn.Text = Config.KillAura and "PASSIVE KILL AURA // ENFORCED" or "PASSIVE KILL AURA // DEACTIVATED"
+	end)
+	
+	-- 3. Button Layout: Weapon Multi-State Speed Overclocker
+	local SpeedBtn = Instance.new("TextButton")
+	SpeedBtn.Size = UDim2.new(0, 320, 0, 45)
+	SpeedBtn.Position = UDim2.new(0, 20, 0, 185)
+	SpeedBtn.BackgroundColor3 = Theme.Surface
+	SpeedBtn.Text = "ATTACK RATIO // UNCACHED VORTEX SPEED"
+	SpeedBtn.TextColor3 = Theme.Accent
+	SpeedBtn.Font = Enum.Font.GothamBold
+	SpeedBtn.TextSize = 12
+	SpeedBtn.Parent = MainFrame
+	Instance.new("UICorner", SpeedBtn).CornerRadius = UDim.new(0, 6)
+	
+	local delayTiers = {0.35, 0.12, 0.001}
+	local tierNames = {"LEGIT CLASSIC SPEED", "FAST OVERCLOCK SPEED", "UNCACHED VORTEX SPEED"}
+	local currentTierIdx = 3
+	
+	SpeedBtn.MouseButton1Click:Connect(function()
+		currentTierIdx = (currentTierIdx % #delayTiers) + 1
+		Config.AttackSpeed = delayTiers[currentTierIdx]
+		SpeedBtn.Text = "ATTACK RATIO // " .. tierNames[currentTierIdx]
+	end)
+
+	-- 4. Button Layout: Physics Motor Modifier (WalkSpeed Toggler)
+	local PhysBtn = Instance.new("TextButton")
+	PhysBtn.Size = UDim2.new(0, 320, 0, 45)
+	PhysBtn.Position = UDim2.new(0, 20, 0, 245)
+	PhysBtn.BackgroundColor3 = Theme.Surface
+	PhysBtn.Text = "VELOCITY MODIFIER // NORMAL (16)"
+	PhysBtn.TextColor3 = Theme.Text
+	PhysBtn.Font = Enum.Font.GothamBold
+	PhysBtn.TextSize = 12
+	PhysBtn.Parent = MainFrame
+	Instance.new("UICorner", PhysBtn).CornerRadius = UDim.new(0, 6)
+	
+	PhysBtn.MouseButton1Click:Connect(function()
+		if Config.WalkSpeedValue == 16 then
+			Config.WalkSpeedValue = 120
+			PhysBtn.Text = "VELOCITY MODIFIER // HYPER VELOCITY (120)"
+		elseif Config.WalkSpeedValue == 120 then
+			Config.WalkSpeedValue = 300
+			PhysBtn.Text = "VELOCITY MODIFIER // LIGHTSPEED CORRIDOR (300)"
+		else
+			Config.WalkSpeedValue = 16
+			PhysBtn.Text = "VELOCITY MODIFIER // NORMAL (16)"
+		end
+	end)
+	
+	-- Close button top panel hook
+	local CloseBtn = Instance.new("TextButton")
+	CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+	CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+	CloseBtn.BackgroundTransparency = 1
+	CloseBtn.Text = "X"
+	CloseBtn.TextColor3 = Theme.Danger
+	CloseBtn.Font = Enum.Font.GothamBold
+	CloseBtn.TextSize = 14
+	CloseBtn.Parent = MainFrame
+	
+	CloseBtn.MouseButton1Click:Connect(function()
+		rootContainer:Destroy()
+	end)
+end
+
+---------------------------------------------------------
+-- TOP-LEVEL GUI BOOTLOADER STAGE
+---------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "VortexMobileEngine"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Key Verification Authorization Step Interface
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 320, 0, 160)
+KeyFrame.Position = UDim2.new(0.5, -160, 0.4, -80)
+KeyFrame.BackgroundColor3 = Theme.Backdrop
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Active = true
+KeyFrame.Draggable = true
+KeyFrame.Parent = ScreenGui
+
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 8)
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Size = UDim2.new(1, 0, 0, 45)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "ENTER KEY TO UNLOCK SYSTEM"
+KeyTitle.TextColor3 = Theme.Text
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.TextSize = 13
+KeyTitle.Parent = KeyFrame
+
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(0, 260, 0, 35)
+InputBox.Position = UDim2.new(0.5, -130, 0.4, -5)
+InputBox.BackgroundColor3 = Theme.Surface
+InputBox.Text = ""
+InputBox.PlaceholderText = "Paste validation key here..."
+InputBox.TextColor3 = Theme.Text
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextSize = 12
+InputBox.Parent = KeyFrame
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 6)
+
+local SubmitBtn = Instance.new("TextButton")
+SubmitBtn.Size = UDim2.new(0, 260, 0, 35)
+SubmitBtn.Position = UDim2.new(0.5, -130, 0.7, 5)
+SubmitBtn.BackgroundColor3 = Theme.Accent
+SubmitBtn.Text = "VALIDATE ACCESS AUTHORITY"
+SubmitBtn.TextColor3 = Theme.Text
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.TextSize = 12
+SubmitBtn.Parent = KeyFrame
+Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+
+SubmitBtn.MouseButton1Click:Connect(function()
+	if InputBox.Text == CORRECT_KEY then
+		KeyFrame:Destroy() -- Safe wipe out validation gate
+		BuildMainConsole(ScreenGui)
+	else
+		SubmitBtn.Text = "ACCESS DENIED // RE-ENTER KEY"
+		SubmitBtn.BackgroundColor3 = Theme.Danger
+		task.wait(1.5)
+		SubmitBtn.Text = "VALIDATE ACCESS AUTHORITY"
+		SubmitBtn.BackgroundColor3 = Theme.Accent
+	end
+end)
