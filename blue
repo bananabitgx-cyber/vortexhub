@@ -1,5 +1,5 @@
 -- =============================================================================
--- VORTEX HUB V3: COMPREHENSIVE PRODUCTION ENGINE (DELTA MOBILE SPECIFIC)
+-- VORTEX HUB V3.1: DYNAMIC DEEP-SCAN ENGINE (UNIVERSAL GAME FIX)
 -- =============================================================================
 
 local Players = game:GetService("Players")
@@ -27,30 +27,36 @@ local Theme = {
 local Config = {
 	AutoFarm = false,
 	KillAura = false,
-	AttackSpeed = 0.001, -- Default uncapped Vortex Mode
+	AttackSpeed = 0.001, 
 	WalkSpeedValue = 16
 }
 
 local CORRECT_KEY = "VortexHubOnTop"
 
 ---------------------------------------------------------
--- DELTA-SAFE SEARCH ENGINE (Recursive World Scan)
+-- DEEP-SCAN TARGET FINDER (Fixes All Games)
 ---------------------------------------------------------
 local function getClosestTarget()
 	local char = LocalPlayer.Character
 	if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
 	
 	local closest, maxDist = nil, math.huge
-	local children = workspace:GetChildren()
 	
-	for i = 1, #children do
-		local obj = children[i]
-		if obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
-			if obj.Humanoid.Health > 0 and obj ~= char then
-				local dist = (char.HumanoidRootPart.Position - obj.HumanoidRootPart.Position).Magnitude
+	-- v3.1 Upgrade: GetDescendants() scans every single folder, model, and sub-folder in the entire game world
+	local allObjects = workspace:GetDescendants()
+	
+	for i = 1, #allObjects do
+		local obj = allObjects[i]
+		
+		-- Look for any Humanoid object that isn't the player
+		if obj:IsA("Humanoid") and obj.Parent and obj.Parent ~= char then
+			local rootPart = obj.Parent:FindFirstChild("HumanoidRootPart") or obj.Parent:FindFirstChild("Torso") or obj.Parent:FindFirstChild("UpperTorso")
+			
+			if rootPart and obj.Health > 0 then
+				local dist = (char.HumanoidRootPart.Position - rootPart.Position).Magnitude
 				if dist < maxDist then
 					maxDist = dist
-					closest = obj
+					closest = obj.Parent
 				end
 			end
 		end
@@ -62,27 +68,33 @@ end
 -- PERFORMANCE-STABLE CONCURRENT THREADS
 ---------------------------------------------------------
 task.spawn(function()
-	while task.wait(0.1) do -- Safe yield loops keep Delta Mobile stable
+	while task.wait(0.1) do 
 		if Config.AutoFarm or Config.KillAura then
 			local target = getClosestTarget()
 			local char = LocalPlayer.Character
 			
 			if target and char and char:FindFirstChild("HumanoidRootPart") then
-				-- Safe Farm Framework: Position player smoothly directly above target head
-				if Config.AutoFarm then
-					char.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 6, 0)
-				end
+				local targetRoot = target:FindFirstChild("HumanoidRootPart") or target:FindFirstChild("Torso") or target:FindFirstChild("UpperTorso")
+				local targetHumanoid = target:FindFirstChildOfClass("Humanoid")
 				
-				-- Safe Aura Processing Calculations
-				if Config.KillAura and (char.HumanoidRootPart.Position - target.HumanoidRootPart.Position).Magnitude <= 30 then
-					target.Humanoid:TakeDamage(15)
-					task.wait(Config.AttackSpeed)
+				if targetRoot and targetHumanoid and targetHumanoid.Health > 0 then
+					-- Auto Farm: Teleport and lock you safely 5 studs right above the enemy
+					if Config.AutoFarm then
+						char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 5, 0)
+					end
+					
+					-- Kill Aura: Inflict damage if in range
+					if Config.KillAura and (char.HumanoidRootPart.Position - targetRoot.Position).Magnitude <= 35 then
+						targetHumanoid.Health = math.max(0, targetHumanoid.Health - 15)
+						task.wait(Config.AttackSpeed)
+					end
 				end
 			end
 		end
 	end
 end)
 
+-- Velocity Modifier Thread
 task.spawn(function()
 	while task.wait(0.5) do
 		local char = LocalPlayer.Character
@@ -102,7 +114,7 @@ local function BuildMainConsole(rootContainer)
 	MainFrame.BackgroundColor3 = Theme.Backdrop
 	MainFrame.BorderSizePixel = 0
 	MainFrame.Active = true
-	MainFrame.Draggable = true -- Mobile drag method natively supported by Delta
+	MainFrame.Draggable = true 
 	MainFrame.Parent = rootContainer
 	
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
@@ -110,18 +122,18 @@ local function BuildMainConsole(rootContainer)
 	local Title = Instance.new("TextLabel")
 	Title.Size = UDim2.new(1, 0, 0, 50)
 	Title.BackgroundTransparency = 1
-	Title.Text = "VORTEX HUB V3 // OPERATIONAL CONTROL"
+	Title.Text = "VORTEX HUB V3.1 // UNIVERSAL CONSOLE"
 	Title.TextColor3 = Theme.Accent
 	Title.Font = Enum.Font.GothamBold
 	Title.TextSize = 14
 	Title.Parent = MainFrame
 	
-	-- 1. Button Layout: Auto Farm Engine Switcher
+	-- 1. Auto Farm
 	local FarmBtn = Instance.new("TextButton")
 	FarmBtn.Size = UDim2.new(0, 320, 0, 45)
 	FarmBtn.Position = UDim2.new(0, 20, 0, 65)
 	FarmBtn.BackgroundColor3 = Theme.Danger
-	FarmBtn.Text = "AUTO FARM CONTROLLER // LOCKED"
+	FarmBtn.Text = "AUTO FARM ENGINE // DEACTIVATED"
 	FarmBtn.TextColor3 = Theme.Text
 	FarmBtn.Font = Enum.Font.GothamBold
 	FarmBtn.TextSize = 12
@@ -131,15 +143,15 @@ local function BuildMainConsole(rootContainer)
 	FarmBtn.MouseButton1Click:Connect(function()
 		Config.AutoFarm = not Config.AutoFarm
 		FarmBtn.BackgroundColor3 = Config.AutoFarm and Theme.Success or Theme.Danger
-		FarmBtn.Text = Config.AutoFarm and "AUTO FARM CONTROLLER // RUNNING" or "AUTO FARM CONTROLLER // LOCKED"
+		FarmBtn.Text = Config.AutoFarm and "AUTO FARM ENGINE // ACTIVE" or "AUTO FARM ENGINE // DEACTIVATED"
 	end)
 	
-	-- 2. Button Layout: Kill Aura Target Invalidator
+	-- 2. Kill Aura
 	local AuraBtn = Instance.new("TextButton")
 	AuraBtn.Size = UDim2.new(0, 320, 0, 45)
 	AuraBtn.Position = UDim2.new(0, 20, 0, 125)
 	AuraBtn.BackgroundColor3 = Theme.Danger
-	AuraBtn.Text = "PASSIVE KILL AURA // DEACTIVATED"
+	AuraBtn.Text = "KILL AURA RADAR // DEACTIVATED"
 	AuraBtn.TextColor3 = Theme.Text
 	AuraBtn.Font = Enum.Font.GothamBold
 	AuraBtn.TextSize = 12
@@ -149,15 +161,15 @@ local function BuildMainConsole(rootContainer)
 	AuraBtn.MouseButton1Click:Connect(function()
 		Config.KillAura = not Config.KillAura
 		AuraBtn.BackgroundColor3 = Config.KillAura and Theme.Success or Theme.Danger
-		AuraBtn.Text = Config.KillAura and "PASSIVE KILL AURA // ENFORCED" or "PASSIVE KILL AURA // DEACTIVATED"
+		AuraBtn.Text = Config.KillAura and "KILL AURA RADAR // ENFORCED" or "KILL AURA RADAR // DEACTIVATED"
 	end)
 	
-	-- 3. Button Layout: Weapon Multi-State Speed Overclocker
+	-- 3. Attack Speed
 	local SpeedBtn = Instance.new("TextButton")
 	SpeedBtn.Size = UDim2.new(0, 320, 0, 45)
 	SpeedBtn.Position = UDim2.new(0, 20, 0, 185)
 	SpeedBtn.BackgroundColor3 = Theme.Surface
-	SpeedBtn.Text = "ATTACK RATIO // UNCACHED VORTEX SPEED"
+	SpeedBtn.Text = "ATTACK RATIO // VORTEX UNCAPPED"
 	SpeedBtn.TextColor3 = Theme.Accent
 	SpeedBtn.Font = Enum.Font.GothamBold
 	SpeedBtn.TextSize = 12
@@ -165,7 +177,7 @@ local function BuildMainConsole(rootContainer)
 	Instance.new("UICorner", SpeedBtn).CornerRadius = UDim.new(0, 6)
 	
 	local delayTiers = {0.35, 0.12, 0.001}
-	local tierNames = {"LEGIT CLASSIC SPEED", "FAST OVERCLOCK SPEED", "UNCACHED VORTEX SPEED"}
+	local tierNames = {"LEGIT CLASSIC", "FAST OVERCLOCK", "VORTEX UNCAPPED"}
 	local currentTierIdx = 3
 	
 	SpeedBtn.MouseButton1Click:Connect(function()
@@ -174,12 +186,12 @@ local function BuildMainConsole(rootContainer)
 		SpeedBtn.Text = "ATTACK RATIO // " .. tierNames[currentTierIdx]
 	end)
 
-	-- 4. Button Layout: Physics Motor Modifier (WalkSpeed Toggler)
+	-- 4. WalkSpeed
 	local PhysBtn = Instance.new("TextButton")
 	PhysBtn.Size = UDim2.new(0, 320, 0, 45)
 	PhysBtn.Position = UDim2.new(0, 20, 0, 245)
 	PhysBtn.BackgroundColor3 = Theme.Surface
-	PhysBtn.Text = "VELOCITY MODIFIER // NORMAL (16)"
+	PhysBtn.Text = "WALKSPEED OVERRIDE // NORMAL (16)"
 	PhysBtn.TextColor3 = Theme.Text
 	PhysBtn.Font = Enum.Font.GothamBold
 	PhysBtn.TextSize = 12
@@ -188,18 +200,17 @@ local function BuildMainConsole(rootContainer)
 	
 	PhysBtn.MouseButton1Click:Connect(function()
 		if Config.WalkSpeedValue == 16 then
-			Config.WalkSpeedValue = 120
-			PhysBtn.Text = "VELOCITY MODIFIER // HYPER VELOCITY (120)"
-		elseif Config.WalkSpeedValue == 120 then
-			Config.WalkSpeedValue = 300
-			PhysBtn.Text = "VELOCITY MODIFIER // LIGHTSPEED CORRIDOR (300)"
+			Config.WalkSpeedValue = 100
+			PhysBtn.Text = "WALKSPEED OVERRIDE // INSANE (100)"
+		elseif Config.WalkSpeedValue == 100 then
+			Config.WalkSpeedValue = 250
+			PhysBtn.Text = "WALKSPEED OVERRIDE // TELEPORT (250)"
 		else
 			Config.WalkSpeedValue = 16
-			PhysBtn.Text = "VELOCITY MODIFIER // NORMAL (16)"
+			PhysBtn.Text = "WALKSPEED OVERRIDE // NORMAL (16)"
 		end
 	end)
 	
-	-- Close button top panel hook
 	local CloseBtn = Instance.new("TextButton")
 	CloseBtn.Size = UDim2.new(0, 30, 0, 30)
 	CloseBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -216,14 +227,13 @@ local function BuildMainConsole(rootContainer)
 end
 
 ---------------------------------------------------------
--- TOP-LEVEL GUI BOOTLOADER STAGE
+-- GUI BOOTLOADER STAGE
 ---------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VortexMobileEngine"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- Key Verification Authorization Step Interface
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Size = UDim2.new(0, 320, 0, 160)
 KeyFrame.Position = UDim2.new(0.5, -160, 0.4, -80)
@@ -260,7 +270,7 @@ local SubmitBtn = Instance.new("TextButton")
 SubmitBtn.Size = UDim2.new(0, 260, 0, 35)
 SubmitBtn.Position = UDim2.new(0.5, -130, 0.7, 5)
 SubmitBtn.BackgroundColor3 = Theme.Accent
-SubmitBtn.Text = "VALIDATE ACCESS AUTHORITY"
+SubmitBtn.Text = "VALIDATE ACCESS"
 SubmitBtn.TextColor3 = Theme.Text
 SubmitBtn.Font = Enum.Font.GothamBold
 SubmitBtn.TextSize = 12
@@ -269,13 +279,13 @@ Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
 
 SubmitBtn.MouseButton1Click:Connect(function()
 	if InputBox.Text == CORRECT_KEY then
-		KeyFrame:Destroy() -- Safe wipe out validation gate
+		KeyFrame:Destroy() 
 		BuildMainConsole(ScreenGui)
 	else
-		SubmitBtn.Text = "ACCESS DENIED // RE-ENTER KEY"
+		SubmitBtn.Text = "INVALID KEY"
 		SubmitBtn.BackgroundColor3 = Theme.Danger
 		task.wait(1.5)
-		SubmitBtn.Text = "VALIDATE ACCESS AUTHORITY"
+		SubmitBtn.Text = "VALIDATE ACCESS"
 		SubmitBtn.BackgroundColor3 = Theme.Accent
 	end
 end)
